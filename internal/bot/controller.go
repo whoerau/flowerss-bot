@@ -232,12 +232,26 @@ func listCmdCtr(m *tb.Message) {
 		}
 
 		sources, _ := model.GetSourcesByUserID(channelChat.ID)
-		rspMessage = fmt.Sprintf("频道 [%s](https://t.me/%s) 订阅列表：\n", channelChat.Title, channelChat.Username)
+		rspMessage = fmt.Sprintf("频道 [%s](https://t.me/%s) 订阅列表：\n", EscapeMarkdown(channelChat.Title), channelChat.Username)
 		if len(sources) == 0 {
-			rspMessage = fmt.Sprintf("频道 [%s](https://t.me/%s) 订阅列表为空", channelChat.Title, channelChat.Username)
+			rspMessage = fmt.Sprintf("频道 [%s](https://t.me/%s) 订阅列表为空", EscapeMarkdown(channelChat.Title), channelChat.Username)
 		} else {
 			for sub, source := range subSourceMap {
-				rspMessage = rspMessage + fmt.Sprintf("[[%d]] [%s](%s)\n", sub.ID, source.Title, source.Link)
+				rspMessage = rspMessage + fmt.Sprintf("[[%d]] [%s](%s)\n", sub.ID, EscapeMarkdown(channelChat.Title), source.Link)
+				if len(rspMessage) >= 3872 {
+					_, err := B.Send(m.Chat, rspMessage, &tb.SendOptions{
+						DisableWebPagePreview: true,
+						ParseMode:             tb.ModeMarkdownV2,
+					})
+					if err != nil {
+						fmt.Println("Send failed", err)
+						_, _ = B.Send(m.Chat, rspMessage, &tb.SendOptions{
+							DisableWebPagePreview: true,
+							ParseMode:             tb.ModeDefault,
+						})
+					}
+					rspMessage = ""
+				}
 			}
 		}
 	} else {
@@ -264,14 +278,36 @@ func listCmdCtr(m *tb.Message) {
 			rspMessage = "订阅列表为空"
 		} else {
 			for sub, source := range subSourceMap {
-				rspMessage = rspMessage + fmt.Sprintf("[[%d]] [%s](%s)\n", sub.ID, source.Title, source.Link)
+				rspMessage = rspMessage + fmt.Sprintf("[[%d]] [%s](%s)\n", sub.ID, EscapeMarkdown(source.Title), source.Link)
+				if len(rspMessage) >= 3872 {
+					_, err := B.Send(m.Chat, rspMessage, &tb.SendOptions{
+						DisableWebPagePreview: true,
+						ParseMode:             tb.ModeMarkdownV2,
+					})
+					if err != nil {
+						fmt.Println("Send failed", err)
+						_, _ = B.Send(m.Chat, rspMessage, &tb.SendOptions{
+							DisableWebPagePreview: true,
+							ParseMode:             tb.ModeDefault,
+						})
+					}
+					rspMessage = ""
+				}
 			}
 		}
 	}
-	_, _ = B.Send(m.Chat, rspMessage, &tb.SendOptions{
+
+	_, err := B.Send(m.Chat, rspMessage, &tb.SendOptions{
 		DisableWebPagePreview: true,
-		ParseMode:             tb.ModeMarkdown,
+		ParseMode:             tb.ModeMarkdownV2,
 	})
+	if err != nil {
+		fmt.Println("Send failed", err)
+		_, _ = B.Send(m.Chat, rspMessage, &tb.SendOptions{
+			DisableWebPagePreview: true,
+			ParseMode:             tb.ModeDefault,
+		})
+	}
 }
 
 func checkCmdCtr(m *tb.Message) {

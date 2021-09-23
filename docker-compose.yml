@@ -6,7 +6,7 @@ services:
       network: host
       context: .
       dockerfile: Dockerfile
-    image: flowerss-bot
+    image: whoer/flowerss-bot
     volumes:
       - ./conf:/root/.flowerss-bot
     restart: unless-stopped

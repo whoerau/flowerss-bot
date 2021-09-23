@@ -1,13 +1,14 @@
 package task
 
 import (
+	"math/rand"
 	"sync"
 	"time"
 
 	"github.com/indes/flowerss-bot/internal/bot"
 	"github.com/indes/flowerss-bot/internal/config"
 	"github.com/indes/flowerss-bot/internal/model"
-	
+
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
@@ -83,6 +84,8 @@ func (t *RssUpdateTask) Start() {
 				if !source.NeedUpdate() {
 					continue
 				}
+
+				time.Sleep(time.Duration(rand.Intn(9)+1) * time.Second)
 
 				newContents, err := source.GetNewContents()
 				if err != nil {
